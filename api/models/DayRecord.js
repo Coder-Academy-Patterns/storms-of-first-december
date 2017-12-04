@@ -7,6 +7,6 @@ const DayRecord = mongoose.model('Forecast', {
   precipIntensity: Number
 })
 
-DayRecord.schema.index({ city: 1, day: 1 })
+DayRecord.schema.index({ city: 1, day: 1 }, { unique: true })
 
 module.exports = DayRecord
