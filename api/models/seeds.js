@@ -1,35 +1,62 @@
 const DayRecord = require('./DayRecord')
 const { readDarkSkyForecast } = require('../services/darkSky')
+const _ = require('lodash')
 
 const melbourneCoords = '-37.8142,144.9632'
+const sydneyCoords = '-33.8548,151.2165'
 
-Promise.all([
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '01', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '02', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '03', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '04', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '05', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '06', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '07', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '08', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '09', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '10', '+1100'),
+function createDayRecordFromDarkSkyForecast(forecast, city) {
+  return DayRecord.create({
+    city,
+    rainfallMM: forecast.precipIntensity,
+    day: new Date(forecast.time * 1000)
+  })
+}
 
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '29', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '11', '30', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '12', '01', '+1100'),
-  readDarkSkyForecast(melbourneCoords, '2017', '12', '02', '+1100'),
-])
+Promise.all([].concat(
+  // Melbourne November
+  _.times(30, (n) => (
+    readDarkSkyForecast(melbourneCoords, '2017', '11', n + 1, '+1100')
+  )),
+  // Melbourne December
+  _.times(5, (n) => (
+    readDarkSkyForecast(melbourneCoords, '2017', '12', n + 1, '+1100')
+  ))
+))
   .then((forecasts) => {
     console.log('forecasts', forecasts)
-    return DayRecord.create(
+    return Promise.all(
+      // Will return an array of Promises
       forecasts.map((forecast) => {
-        return {
-          precipType: forecast.precipType,
-          precipIntensity: forecast.precipIntensity,
-          city: 'Melbourne',
-          day: new Date(forecast.time * 1000)
-        }
+        // Will return a Promise for each created day record
+        return createDayRecordFromDarkSkyForecast(forecast, 'Melbourne')
+      })
+    )
+  })
+  .then((docs) => {
+    console.log('created', docs)
+  })
+  .catch((error) => {
+    console.error('Error seeding', error)
+  })
+
+Promise.all([].concat(
+  // Sydney November
+  _.times(30, (n) => (
+    readDarkSkyForecast(sydneyCoords, '2017', '11', n + 1, '+1100')
+  )),
+  // Sydney December
+  _.times(5, (n) => (
+    readDarkSkyForecast(sydneyCoords, '2017', '12', n + 1, '+1100')
+  ))
+))
+  .then((forecasts) => {
+    console.log('forecasts', forecasts)
+    return Promise.all(
+      // Will return an array of Promises
+      forecasts.map((forecast) => {
+        // Will return a Promise for each created day record
+        return createDayRecordFromDarkSkyForecast(forecast, 'Sydney')
       })
     )
   })
