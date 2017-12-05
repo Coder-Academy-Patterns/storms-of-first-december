@@ -1,1 +1,7 @@
 http://localhost:7000/day-records
+
+###
+http://localhost:7000/day-records/Melbourne
+
+###
+http://localhost:7000/day-records/Melbourne/2017/10
